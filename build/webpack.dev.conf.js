@@ -13,7 +13,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
 const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
-
+const { SkeletonPlugin } = require('page-skeleton-webpack-plugin')
 const portfinder = require('portfinder')
 
 const HOST = process.env.HOST
@@ -21,7 +21,7 @@ const PORT = process.env.PORT && Number(process.env.PORT)
 const {version} = require('./../package.json');
 
 function getDLLFileName() {
-    const fileNames = fs.readdirSync( path.resolve(__dirname, '../dist/dll/'));
+    const fileNames = fs.readdirSync( path.resolve(__dirname, '../static/dll/'));
 
     return _.find(fileNames, fileName => fileName.endsWith(`${version}.js`));
 }
@@ -77,20 +77,25 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     new webpack.DllReferencePlugin({
       context: __dirname,
       // 在这里引入 manifest 文件
-      manifest: require('../dist/dll/vue.manifest.json')
+      manifest: require('../static/dll/vue.manifest.json')
     }),
     //把js插入到html文件中
     new AddAssetHtmlPlugin({
-      filepath: require.resolve(`../dist/dll/${getDLLFileName()}`),
+      filepath: require.resolve(`../static/dll/${getDLLFileName()}`),
       outputPath: 'dll',
       includeSourcemap: false,
       hash: true,
-      publicPath: '/dist/dll/'
+      publicPath: '/static/dll/'
     }),
     new HtmlWebpackPlugin({
       filename: 'index.html',
       template: 'index.html',
       inject: true
+    }),
+    new SkeletonPlugin({
+        pathname: path.resolve(__dirname, 'Skeleton.vue'), // the path to store shell file
+        staticDir: path.resolve(__dirname, './src'), // the same as the `output.path`
+        routes: ['/'], // Which routes you want to generate skeleton screen
     }),
     new HappyPack({
       id: 'js',
